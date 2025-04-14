@@ -54,7 +54,7 @@ const CaravaggioSalome: React.FC = () => {
   };
   
   return (
-    <div className={`max-w-6xl mx-auto p-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+    <div className={`max-w-[1400px] mx-auto p-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-serif mb-4">
           Caravaggio: Salome receives the Head of John the Baptist
@@ -88,38 +88,42 @@ const CaravaggioSalome: React.FC = () => {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left Column */}
-        <div className="md:col-span-2">
-          <div className="relative interactive-painting">
-            <img 
-              src="/images/JB.jpg" 
-              alt="Caravaggio: Salome receives the Head of John the Baptist" 
-              className="w-full rounded-md shadow-lg"
-            />
-            
-            {/* Interactive points overlay */}
-            {points.map(point => (
-              <button
-                key={point.id}
-                className={`absolute w-8 h-8 rounded-full transform -translate-x-1/2 -translate-y-1/2 border-2 transition-all duration-200 ${
-                  activePointId === point.id 
-                    ? 'bg-amber-500 border-white scale-125 z-10' 
-                    : 'bg-white/80 border-amber-500 hover:scale-110'
-                }`}
-                style={{ 
-                  top: point.position.top, 
-                  left: point.position.left 
-                }}
-                onClick={() => handlePointClick(point.id)}
-                aria-label={`View information about ${point.title}`}
-              >
-                <span className="sr-only">{point.title}</span>
-              </button>
-            ))}
+      {/* Main Content - Side by side layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* Left Column - Fixed size approach */}
+        <div className="lg:col-span-7">
+          <div className="bg-gray-800 rounded p-2 overflow-auto">
+            <div className="relative" style={{ width: '900px', maxWidth: '100%', margin: '0 auto' }}>
+              <img 
+                src="/images/JB.jpg" 
+                alt="Caravaggio: Salome receives the Head of John the Baptist" 
+                className="rounded-md shadow-lg"
+                width="900"
+              />
+              
+              {/* Interactive points overlay */}
+              {points.map(point => (
+                <button
+                  key={point.id}
+                  className={`absolute w-8 h-8 rounded-full transform -translate-x-1/2 -translate-y-1/2 border-2 transition-all duration-200 ${
+                    activePointId === point.id 
+                      ? 'bg-amber-500 border-white scale-125 z-10' 
+                      : 'bg-white/80 border-amber-500 hover:scale-110'
+                  }`}
+                  style={{ 
+                    top: point.position.top, 
+                    left: point.position.left 
+                  }}
+                  onClick={() => handlePointClick(point.id)}
+                  aria-label={`View information about ${point.title}`}
+                >
+                  <span className="sr-only">{point.title}</span>
+                </button>
+              ))}
+            </div>
             
             {/* Caption */}
-            <div className="mt-2 text-sm italic text-center">
+            <div className="mt-2 text-sm italic text-center text-white pb-2">
               Image © The National Gallery, London
             </div>
           </div>
@@ -128,7 +132,7 @@ const CaravaggioSalome: React.FC = () => {
           {activePointId && (
             <div className={`mt-4 p-4 rounded-md border-l-4 border-amber-500 ${
               isDark ? 'bg-gray-800' : 'bg-white'
-            } shadow-md`}>
+            } shadow-md max-w-[900px] mx-auto`}>
               <h3 className="text-xl font-medium mb-2">
                 {points.find(p => p.id === activePointId)?.title}
               </h3>
@@ -139,8 +143,8 @@ const CaravaggioSalome: React.FC = () => {
           )}
         </div>
         
-        {/* Right Column - Info Panel */}
-        <div>
+        {/* Right Column - Info Panels */}
+        <div className="lg:col-span-5">
           <div className={`p-6 rounded-md shadow-md ${
             isDark ? 'bg-gray-800' : 'bg-white'
           }`}>
