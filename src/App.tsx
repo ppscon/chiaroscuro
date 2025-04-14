@@ -5,6 +5,7 @@ import { PaintProvider } from './context/PaintContext';
 import Layout from './components/layout/Layout';
 import ImageUploader from './components/canvas/ImageUploader';
 import DaVinciChiaroscuro from './components/education/DaVinciChiaroscuro';
+import CaravaggioSalome from './components/education/CaravaggioSalome';
 import ColorPicker from './components/color/ColorPicker';
 import ImageAnalyzer from './components/canvas/ImageAnalyzer';
 import ArtisticLandingPage from './pages/LandingPage';
@@ -16,6 +17,7 @@ const App: React.FC = () => {
   // Set default tab to 'home' for the landing page
   const [activeTab, setActiveTab] = useState('home');
   const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
+  const [educationSubject, setEducationSubject] = useState<'davinci' | 'caravaggio'>('davinci');
   
   const handleImageLoad = (image: HTMLImageElement, file: File) => {
     setSelectedImage(image);
@@ -45,7 +47,40 @@ const App: React.FC = () => {
               )}
               
               {activeTab === 'education' && (
-                <DaVinciChiaroscuro />
+                <div className="flex-1 flex flex-col">
+                  <div className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+                    <div className="max-w-6xl mx-auto flex gap-4">
+                      <button 
+                        onClick={() => setEducationSubject('davinci')}
+                        className={`px-4 py-2 rounded-md transition-colors ${
+                          educationSubject === 'davinci' 
+                            ? 'bg-pigment-600 text-white' 
+                            : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        Leonardo da Vinci
+                      </button>
+                      <button 
+                        onClick={() => setEducationSubject('caravaggio')}
+                        className={`px-4 py-2 rounded-md transition-colors ${
+                          educationSubject === 'caravaggio' 
+                            ? 'bg-pigment-600 text-white' 
+                            : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        Caravaggio
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 overflow-auto">
+                    {educationSubject === 'davinci' ? (
+                      <DaVinciChiaroscuro />
+                    ) : (
+                      <CaravaggioSalome />
+                    )}
+                  </div>
+                </div>
               )}
               
               {/* Use the new ColorPicker component */}
