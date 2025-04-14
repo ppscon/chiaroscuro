@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Paint Match Lab",
+  "name": "Paint Match Lab | Color to Paint Conversion",
   "icons": [
     {
       "src": "favicon.ico",

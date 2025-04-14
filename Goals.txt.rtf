@@ -1,0 +1,48 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 **Project Goal:**\
+Develop a React-based web application that allows users to upload an image, select a color from it using a color picker tool, and receive suggested mixing formulas using specific artist oil paint brands to achieve that color.\
+\
+**Core Functionality:**\
+1.  **Image Upload & Display:** Allow users to upload common image formats (JPEG, PNG). Display the image.\
+2.  **Color Picker:** Implement a tool (e.g., eyedropper) for users to select a pixel or small region on the displayed image. Extract the average RGB/HEX value. Provide guidance to the user to select the 'halftone' or main color area, avoiding highlights and deep shadows (addressing chiaroscuro).\
+3.  **Brand/Paint Selection:** Allow users to specify which of the available paint brands/lines they own or want to use for the mixture:\
+    *   Michael Harding Artist Oils\
+    *   Winsor & Newton Artists' Oil Colour\
+    *   Grumbacher Pre-Tested Oils\
+    *   Gamblin Artist's Oil Colors\
+    *   Old Holland Classic Oil Colours\
+    *   Sennelier Artists' Oil Colours\
+4.  **Color Conversion & Gamut Mapping:**\
+    *   Convert the selected RGB color to a perceptually uniform color space (e.g., CIELAB). Assume a standard input color space like sRGB unless otherwise specified.\
+    *   Implement gamut mapping: Check if the target CIELAB color is within the achievable gamut of the selected paint brand(s)/set. If not, determine the closest achievable color within the gamut (using perceptual distance, e.g., Delta E). Inform the user if the color is out-of-gamut and that the formula is for the closest match.\
+5.  **Mixing Algorithm:**\
+    *   Utilize a database (pre-populated based on research) containing paint information: Brand, Color Name, CI Pigment Code(s), Opacity, Binder, potentially Munsell values (esp. for Gamblin).\
+    *   Implement a mixing prediction model. Start with a simpler approach suitable for initial development, like interpolation based on pre-calculated/measured mixture data for key single-pigment paints, or a refined heuristic model incorporating pigment properties. The model should take the target CIELAB color and the available paints (from the user's selection and database) as input.\
+    *   The algorithm should output one or more suggested recipes (e.g., Paint A: 60%, Paint B: 30%, Titanium White: 10%), prioritizing simpler mixes (fewer components) where possible. Account for pigment properties like tinting strength and opacity if using a heuristic approach.\
+6.  **Recipe Display:** Present the suggested mixing formula(s) clearly to the user, including paint names and approximate percentages or parts.\
+\
+**Key Data Requirements:**\
+*   A comprehensive database mapping paint names across the specified brands to their CI Pigment Codes, opacity, binder, lightfastness, series, and potentially measured colorimetric data (CIELAB/Munsell). This data needs to be meticulously sourced, validated, and structured (e.g., JSON or database format).\
+\
+**Technical Considerations & Challenges:**\
+*   **Color Science:** Accurately handle color space conversions (RGB -> CIELAB) and gamut mapping calculations (Delta E). Requires understanding the fundamental differences between additive (screen) and subtractive (paint) color systems.\
+*   **Mixing Complexity:** Real paint mixing is non-linear and highly dependent on specific pigment properties. The chosen algorithm must approximate this complex behavior, acknowledging inherent limitations. Avoid overly simplistic linear mixing assumptions. Advanced models like Kubelka-Munk or large-scale ML are likely too complex for initial development; focus on data-driven interpolation (if mixture data is available) or refined heuristics based on pigment data (CI codes, opacity, tinting strength).\
+*   **Data Acquisition:** The accuracy of the mixing predictions is critically dependent on the quality and completeness of the paint database. Plan for how this essential data will be acquired, validated, and managed.\
+*   **Chiaroscuro Interpretation:** The RGB value selected from the image is heavily influenced by lighting and shadow. The primary strategy must involve clear user guidance to select the halftone region, as robust computational separation of illumination and reflectance is likely out of scope initially.\
+*   **Frontend:** Use React. Identify necessary components for image handling, color picking, user selections (brands, available paints), parameter inputs, and recipe display. Consider appropriate state management solutions.\
+\
+**Request:**\
+Provide guidance on:\
+1.  Suitable JavaScript libraries for color space conversions (e.g., sRGB to CIELAB) and calculating perceptual color difference (Delta E, specifically Delta E 2000 is preferred).\
+2.  A potential data structure (e.g., JSON object schema) for storing the paint information in the database. Include fields for Brand, ProductLine, ColorName, PigmentCodes (array?), Opacity, Binder, Lightfastness, Series, and optional CIELAB/Munsell values.\
+3.  A basic algorithmic structure or pseudocode outline for the mixing prediction model, focusing on either:\
+    a) An interpolation approach (assuming some pairwise mixture data exists).\
+    b) A refined heuristic approach (using pigment properties like opacity, tinting strength estimates, complementary neutralization rules).\
+4.  Suggestions for a React component architecture to handle the core functionalities (Image display/picker, Paint selection panel, Recipe output display).\
+5.  Strategies for implementing the user interaction related to color picking, specifically how to effectively guide the user to select the halftone region and communicate the concept of chiaroscuro simply within the UI.}
