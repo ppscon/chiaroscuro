@@ -19,6 +19,7 @@
     "culori": "^4.0.1",
     "framer-motion": "^12.6.5",
     "lucide-react": "^0.487.0",
+    "npx": "^10.2.2",
     "react": "^19.1.0",
     "react-color": "^2.19.3",
     "react-dom": "^19.1.0",

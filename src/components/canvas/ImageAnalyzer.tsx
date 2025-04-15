@@ -10,77 +10,215 @@ interface ImageAnalyzerProps {
 const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ preloadedImage }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Start state as null
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
   const [imageAnalysis, setImageAnalysis] = useState<ImageAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
 
-  // Use preloaded image if available
+  console.log(`[ImageAnalyzer Render] Prop: ${preloadedImage?.src}, State: ${imagePreviewUrl}, Ref: ${imageRef.current?.src}`);
+
+  // Effect to handle the preloadedImage prop
   useEffect(() => {
-    if (preloadedImage) {
-      // Create a data URL from the preloaded image
-      const canvas = document.createElement('canvas');
-      canvas.width = preloadedImage.width;
-      canvas.height = preloadedImage.height;
-      
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(preloadedImage, 0, 0);
-        try {
-          const dataUrl = canvas.toDataURL('image/png');
-          setImagePreview(dataUrl);
-        } catch (error) {
-          console.error('Error creating data URL from preloaded image:', error);
-          setError('Failed to load the preloaded image.');
+    console.log("[ImageAnalyzer Prop Effect] Running. Prop:", preloadedImage);
+    if (preloadedImage && preloadedImage.complete && preloadedImage.naturalWidth > 0) {
+        // Only update if the ref is not already pointing to the same image
+        if (imageRef.current !== preloadedImage) {
+            console.log("[ImageAnalyzer Prop Effect] Valid preloadedImage received. Updating ref and generating data URL for preview.");
+            
+            // Update the ref immediately
+            imageRef.current = preloadedImage;
+            
+            // Generate a stable data URL for preview
+            try {
+                const canvas = document.createElement('canvas');
+                // Match canvas size to the actual image dimensions
+                canvas.width = preloadedImage.naturalWidth;
+                canvas.height = preloadedImage.naturalHeight;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) throw new Error('Failed to get canvas context for data URL generation');
+                ctx.drawImage(preloadedImage, 0, 0);
+                const dataUrl = canvas.toDataURL(); // Defaults to PNG, which is fine
+                console.log("[ImageAnalyzer Prop Effect] Setting preview URL to data URL (length:", dataUrl.length, ")");
+                setImagePreviewUrl(dataUrl);
+                setImageAnalysis(null); // Reset analysis
+                setError(null);
+            } catch (err) {
+                console.error("[ImageAnalyzer Prop Effect] Error generating data URL:", err);
+                setError("Could not display the preloaded image.");
+                setImagePreviewUrl(null);
+                imageRef.current = null;
+            }
+        } else {
+             console.log("[ImageAnalyzer Prop Effect] Prop image already matches ref, no update needed.");
+             // Ensure preview URL is still set correctly (defensive)
+             if (!imagePreviewUrl && imageRef.current?.src) {
+                 console.warn("[ImageAnalyzer Prop Effect] Preview URL was null, attempting to restore from ref src (might be blob):");
+                 // This might still fail if src is a blob, but worth a try
+                 // Ideally, the data URL generation above should handle this.
+                 // Let's re-generate the data URL if preview is missing.
+                 try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = imageRef.current.naturalWidth;
+                    canvas.height = imageRef.current.naturalHeight;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) throw new Error('Failed to get canvas context for data URL restore');
+                    ctx.drawImage(imageRef.current, 0, 0);
+                    const dataUrl = canvas.toDataURL(); 
+                    console.log("[ImageAnalyzer Prop Effect] Restoring preview URL with data URL (length:", dataUrl.length, ")");
+                    setImagePreviewUrl(dataUrl);
+                 } catch (err) {
+                     console.error("[ImageAnalyzer Prop Effect] Error restoring data URL:", err);
+                     setError("Could not display the image.");
+                 }
+             }
         }
-      }
+    } else if (!preloadedImage) {
+        // Prop is null/undefined, clear everything if not already cleared
+        if (imageRef.current || imagePreviewUrl) {
+             console.log("[ImageAnalyzer Prop Effect] preloadedImage removed. Clearing state and ref.");
+            setImagePreviewUrl(null);
+            imageRef.current = null;
+            setImageAnalysis(null);
+            setError(null);
+        }
+    } else {
+         console.log("[ImageAnalyzer Prop Effect] preloadedImage exists but is not complete/loaded yet.");
+         // We might need to add logic here to wait for the preloadedImage to load if it arrives incomplete
+         // For now, we assume App.tsx sends a loaded image.
     }
-  }, [preloadedImage]);
+  }, [preloadedImage, imagePreviewUrl]); // Add imagePreviewUrl back to potentially restore if needed
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Reset states
+    console.log("[ImageAnalyzer FileChange] File selected. Clearing current state/ref.");
     setError(null);
     setImageAnalysis(null);
+    setImagePreviewUrl(null); // Clear previous preview
+    imageRef.current = null; // Clear the ref
     
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-      setImagePreview(result);
+      console.log("[ImageAnalyzer FileChange] Setting preview URL from file (data URL).");
+      setImagePreviewUrl(result); // Set the data URL read from the file
+      const img = new Image();
+      img.onload = () => {
+        console.log("[ImageAnalyzer FileChange] Updating imageRef from file.");
+        imageRef.current = img; // Update the ref with the newly loaded image
+      };
+      img.onerror = () => { 
+        console.error("[ImageAnalyzer FileChange] Failed to load image from file reader result.");
+        setError('Could not load the selected image file.');
+        setImagePreviewUrl(null);
+        imageRef.current = null;
+      };
+      img.src = result;
     };
     reader.onerror = () => {
+      console.error("[ImageAnalyzer FileChange] FileReader error.");
       setError('Failed to read the selected file.');
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(file); 
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    
+    console.log("[ImageAnalyzer Drop] File dropped. Clearing current state/ref.");
+    setError(null);
+    setImageAnalysis(null);
+    setImagePreviewUrl(null); // Clear previous preview
+    imageRef.current = null; // Clear the ref
+
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        console.log("[ImageAnalyzer Drop] Setting preview URL from dropped file (data URL).");
+        setImagePreviewUrl(result);
+        const img = new Image();
+        img.onload = () => {
+            console.log("[ImageAnalyzer Drop] Updating imageRef from dropped file.");
+          imageRef.current = img;
+        };
+        img.onerror = () => {
+            console.error("[ImageAnalyzer Drop] Failed to load image from dropped file.");
+            setError('Could not load the dropped image file.');
+            setImagePreviewUrl(null); 
+            imageRef.current = null;
+        };
+        img.src = result;
+      };
+      reader.onerror = () => {
+        console.error("[ImageAnalyzer Drop] FileReader error on drop.");
+        setError('Failed to read the dropped file.');
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setError('Please select an image file (JPEG, PNG, etc.).');
+    }
   };
 
   const handleAnalyzeClick = async () => {
-    if (!imageRef.current || !imagePreview) return;
+    console.log("[ImageAnalyzer Analyze] Clicked. imageRef.current:", imageRef.current);
+    if (!imageRef.current || !imageRef.current.src) {
+        console.warn("[ImageAnalyzer Analyze] No image ref or src found.");
+        setError('No image is loaded to analyze.');
+        return;
+    }
     
     setIsAnalyzing(true);
     setError(null);
     
     try {
-      // Make sure image is fully loaded before analysis
-      if (!imageRef.current.complete) {
-        await new Promise<void>((resolve) => {
-          const onLoad = () => {
-            imageRef.current?.removeEventListener('load', onLoad);
-            resolve();
-          };
-          imageRef.current!.addEventListener('load', onLoad);
-        });
-      }
-      
+        // Check completion and dimensions
+        if (!imageRef.current.complete || imageRef.current.naturalWidth === 0) {
+             console.log("[ImageAnalyzer Analyze] Image ref not complete or has no width, waiting...");
+            await new Promise<void>((resolve, reject) => {
+                const currentImage = imageRef.current;
+                if (!currentImage) {
+                    return reject(new Error('Image reference became null unexpectedly within promise.'));
+                }
+                
+                const loadHandler = () => {
+                    console.log("[ImageAnalyzer Analyze] Image loaded via listener.");
+                    cleanup();
+                    resolve();
+                };
+                const errorHandler = (err: Event | string) => {
+                     console.error("[ImageAnalyzer Analyze] Image failed to load via listener:", err);
+                    cleanup();
+                    reject(new Error('Image failed to load before analysis'));
+                };
+                const cleanup = () => {
+                    currentImage.removeEventListener('load', loadHandler);
+                    currentImage.removeEventListener('error', errorHandler);
+                };
+
+                currentImage.addEventListener('load', loadHandler);
+                currentImage.addEventListener('error', errorHandler);
+                // Double-check completion after adding listeners
+                if (currentImage.complete && currentImage.naturalWidth > 0) {
+                    console.log("[ImageAnalyzer Analyze] Image already complete after adding listeners.");
+                    cleanup();
+                    resolve();
+                }
+            });
+        }
+      console.log("[ImageAnalyzer Analyze] Proceeding with analysis using image:", imageRef.current);
       const analysis = await analyzeImage(imageRef.current);
       setImageAnalysis(analysis);
     } catch (error) {
       console.error('Failed to analyze image:', error);
-      setError('Failed to analyze the image. Please try again with a different image.');
+      setError(`Failed to analyze the image: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -93,36 +231,13 @@ const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ preloadedImage }) => {
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-
-    // Reset states
-    setError(null);
-    setImageAnalysis(null);
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const result = event.target?.result as string;
-          setImagePreview(result);
-        };
-        reader.onerror = () => {
-          setError('Failed to read the dropped file.');
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setError('Please select an image file (JPEG, PNG, etc.).');
-      }
-    }
-  };
-
+  
   const resetImage = () => {
-    setImagePreview(null);
+    console.log("[ImageAnalyzer Reset] Resetting...");
+    setImagePreviewUrl(null);
     setImageAnalysis(null);
     setError(null);
+    imageRef.current = null; 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -143,7 +258,7 @@ const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ preloadedImage }) => {
         Image Analyzer
       </h2>
 
-      {!imagePreview ? (
+      {!imagePreviewUrl ? (
         <div
           style={{
             border: `2px dashed ${isDark ? '#555555' : '#cccccc'}`,
@@ -208,16 +323,17 @@ const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ preloadedImage }) => {
               border: `1px solid ${isDark ? '#444444' : '#dddddd'}`
             }}>
               <img
-                src={imagePreview}
+                key={imagePreviewUrl}
+                src={imagePreviewUrl}
                 alt="Selected image"
                 style={{
                   width: '100%',
                   height: 'auto',
                   display: 'block',
-                  maxHeight: '1000px',
+                  maxWidth: '800px',
+                  maxHeight: '600px',
                   objectFit: 'contain'
                 }}
-                ref={imageRef}
               />
             </div>
             
@@ -265,7 +381,6 @@ const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ preloadedImage }) => {
           <div style={{ 
             flex: '1 1 48%',
             minWidth: '600px',
-            maxHeight: '1000px',
             overflowY: 'auto',
             padding: '15px',
             borderRadius: '8px',
@@ -280,7 +395,6 @@ const ImageAnalyzer: React.FC<ImageAnalyzerProps> = ({ preloadedImage }) => {
                 borderRadius: '8px'
               }}>
                 <p style={{ marginBottom: '15px' }}>Analyzing image...</p>
-                {/* Loading indicator or spinner could go here */}
               </div>
             ) : imageAnalysis ? (
               <ImageAnalysisDisplay analysis={imageAnalysis} />

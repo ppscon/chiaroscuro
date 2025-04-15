@@ -9,6 +9,7 @@ import CaravaggioSalome from './components/education/CaravaggioSalome';
 import ColorPicker from './components/color/ColorPicker';
 import ImageAnalyzer from './components/canvas/ImageAnalyzer';
 import ArtisticLandingPage from './pages/LandingPage';
+import PaintMixer from './components/color/PaintMixer';
 
 // Import CSS for fonts
 import './assets/fonts/fonts.css';
@@ -17,12 +18,12 @@ const App: React.FC = () => {
   // Set default tab to 'home' for the landing page
   const [activeTab, setActiveTab] = useState('home');
   const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
-  const [educationSubject, setEducationSubject] = useState<'davinci' | 'caravaggio'>('davinci');
+  const [educationSubject, setEducationSubject] = useState<'davinci' | 'caravaggio'>('caravaggio');
   
   const handleImageLoad = (image: HTMLImageElement, file: File) => {
     setSelectedImage(image);
-    // After loading the image, switch to the color picker tab
-    setActiveTab('picker');
+    // After loading the image, switch to the analyzer tab
+    setActiveTab('analyze');
   };
   
   const handleTabChange = (tab: string) => {
@@ -98,9 +99,7 @@ const App: React.FC = () => {
               )}
               
               {activeTab === 'mixer' && (
-                <div className="flex-1 flex items-center justify-center">
-                  <p>Paint Mixer Component (Coming Soon)</p>
-                </div>
+                <PaintMixer selectedImage={selectedImage} />
               )}
               
               {/* Prompt to upload an image if needed */}

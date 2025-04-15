@@ -87,7 +87,7 @@ export const PaintProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     // Save selected brands to localStorage
     localStorage.setItem('chiaroscuro-selected-brands', JSON.stringify(selectedBrands));
-  }, [selectedBrands]);
+  }, [selectedBrands, availableBrands]);
   
   const toggleBrandSelection = (brandId: string) => {
     setSelectedBrands(prev => 

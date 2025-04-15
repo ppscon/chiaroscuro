@@ -19,7 +19,7 @@ const CaravaggioSalome: React.FC = () => {
   const points: PointOfInterest[] = [
     {
       id: 'salome',
-      position: { top: '45%', left: '35%' },
+      position: { top: '45%', left: '16%' },
       title: 'Salome',
       description: 'Her serious expression and sidelong glance are enigmatic: is she turning away from the head in disgust or shame, appalled at the horror of what she has brought about?'
     },
@@ -31,19 +31,19 @@ const CaravaggioSalome: React.FC = () => {
     },
     {
       id: 'maidservant',
-      position: { top: '30%', left: '55%' },
+      position: { top: '38%', left: '28%' },
       title: 'Elderly Maidservant',
       description: 'The elderly maidservant clasps her hands in grief, setting the emotional tone. In contrast to the young and beautiful Salome is this elderly maidservant, her face wrinkled with age.'
     },
     {
       id: 'john',
-      position: { top: '60%', left: '50%' },
+      position: { top: '65%', left: '35%' },
       title: 'John\'s Head',
       description: 'The severed head of John the Baptist, the central focus of the painting\'s narrative and emotional power.'
     },
     {
       id: 'chiaroscuro',
-      position: { top: '35%', left: '25%' },
+      position: { top: '40%', left: '55%' },
       title: 'Chiaroscuro Effect',
       description: 'Note the pronounced chiaroscuro (contrast between light and dark) typical of Caravaggio\'s mature style. He conveys the scene\'s emotional power through a restricted range of color and dramatic lighting.'
     }
