@@ -18,7 +18,6 @@ const PaintMixer: React.FC<PaintMixerProps> = ({ selectedImage }) => {
   const [targetColor, setTargetColor] = useState<string>('#FF8000'); // Default Orange
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imagePreviewRef = useRef<HTMLImageElement>(null);
 
   // Effect to draw image onto canvas when it changes or loads
   useEffect(() => {
@@ -27,7 +26,7 @@ const PaintMixer: React.FC<PaintMixerProps> = ({ selectedImage }) => {
       const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Opt-in for performance
       if (ctx) {
         // Set canvas size to match image, potentially scaled
-        const MAX_PREVIEW_WIDTH = 400; 
+        const MAX_PREVIEW_WIDTH = 800; // Doubled from 400
         const scale = Math.min(1, MAX_PREVIEW_WIDTH / selectedImage.naturalWidth);
         canvas.width = selectedImage.naturalWidth * scale;
         canvas.height = selectedImage.naturalHeight * scale;
@@ -141,139 +140,239 @@ const PaintMixer: React.FC<PaintMixerProps> = ({ selectedImage }) => {
     onChange: (value: string) => void, 
     hsl: { h: number, s: number, l: number } | null 
   }) => (
-    <div className="flex flex-col items-center">
-      <label htmlFor={id} className="mb-2 font-medium">{label}</label>
-      <div className="flex items-center gap-2">
-         <input
-            type="color"
-            id={`${id}-picker`}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-16 h-16 border-none cursor-pointer rounded-md shadow-md p-0"
-          />
-         <input 
-            type="text"
-            id={id}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className={`w-24 px-2 py-1 border rounded font-mono text-sm ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
-            maxLength={7}
-            placeholder="#RRGGBB"
-          />
+    <div className="flex flex-col">
+      <label htmlFor={id} className="mb-3 font-medium text-lg">{label}</label>
+      <div className="flex items-center gap-5">
+         <div 
+            className="w-32 h-32 rounded-lg shadow-md overflow-hidden relative"
+            style={{ backgroundColor: value }}
+         >
+            <input
+              type="color"
+              id={`${id}-picker`}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+         </div>
+         <div className="flex flex-col gap-2">
+           <input 
+              type="text"
+              id={id}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className={`w-36 px-3 py-2 border rounded font-mono text-base ${isDark ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-700'}`}
+              maxLength={7}
+              placeholder="#RRGGBB"
+            />
+            {/* Display HSL values */}
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {hsl ? `H:${hsl.h}° S:${hsl.s}% L:${hsl.l}%` : '-'}
+            </div>
+         </div>
       </div>
-      {/* Display HSL values */}
-      <div className="mt-2 text-xs h-4 text-gray-500 dark:text-gray-400">
-        {hsl ? `H:${hsl.h}° S:${hsl.s}% L:${hsl.l}%` : '-'}
-      </div> 
+    </div>
+  );
+
+  // Ratio visualization component
+  const RatioVisualization = () => (
+    <div className="w-full mt-4">
+      <div className="relative h-12 rounded-full overflow-hidden shadow-inner">
+        <div 
+          className="absolute inset-y-0 left-0 border-r border-white dark:border-gray-700"
+          style={{ 
+            width: `${Math.round((1 - bestRatio) * 100)}%`, 
+            backgroundColor: colorA 
+          }}
+        />
+        <div 
+          className="absolute inset-y-0 right-0"
+          style={{ 
+            width: `${Math.round(bestRatio * 100)}%`, 
+            backgroundColor: colorB 
+          }}
+        />
+      </div>
+      <div className="flex justify-between mt-2">
+        <span className="text-sm text-gray-500 dark:text-gray-400">{`${Math.round((1 - bestRatio) * 100)}% ${colorA}`}</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">{`${Math.round(bestRatio * 100)}% ${colorB}`}</span>
+      </div>
     </div>
   );
 
   return (
-    <div className={`flex-1 p-6 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-2xl font-semibold mb-6 text-center">Paint Mixer (Target Matching)</h2>
+    <div className={`flex-1 p-8 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-4xl font-semibold mb-8 text-center">Paint Mixer</h2>
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Left Column: Image Preview & Target Color Input */}
-          <div className="lg:col-span-4 flex flex-col items-center">
-            <h3 className="text-lg font-semibold mb-4">Select Target Color</h3>
-            {selectedImage ? (
-              <div className="mb-4 text-center">
-                <p className="text-sm mb-2">Click image to pick target color:</p>
-                 <canvas 
-                    ref={canvasRef}
-                    onClick={handleImageClick}
-                    className="cursor-crosshair rounded-md shadow-md border border-gray-400 dark:border-gray-600"
-                    style={{ maxWidth: '100%', height: 'auto' }} // Ensure responsive display
-                  />
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Left Column: Target Color & Preview */}
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-2xl font-semibold mb-6 pb-3 border-b border-gray-200 dark:border-gray-700">Target Color</h3>
+                {selectedImage ? (
+                  <div className="space-y-6">
+                    <p className="text-lg text-gray-600 dark:text-gray-300">Click on the image to select your target color:</p>
+                    <div className="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 shadow-md">
+                      <canvas 
+                        ref={canvasRef}
+                        onClick={handleImageClick}
+                        className="cursor-crosshair max-w-full"
+                        style={{ maxHeight: '500px', width: '100%', objectFit: 'contain' }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-6 mt-6">
+                      <ColorInput 
+                        id="targetColor" 
+                        label="Selected Color" 
+                        value={targetColor} 
+                        onChange={(v) => handleColorChange(setTargetColor, v)} 
+                        hsl={targetColorInfo.hsl} 
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-12 text-center border-2 rounded-lg border-dashed border-gray-300 dark:border-gray-600">
+                    <p className="text-lg text-gray-500 dark:text-gray-400">Upload an image on the Canvas tab first to enable color picking</p>
+                  </div>
+                )}
               </div>
-            ) : (
-               <div className="mb-4 p-4 text-center border rounded-md border-dashed border-gray-400 dark:border-gray-600">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Upload an image on the Canvas tab to enable color picking.</p>
-               </div>
-            )}
-            <ColorInput id="targetColor" label="Target Color" value={targetColor} onChange={(v) => handleColorChange(setTargetColor, v)} hsl={targetColorInfo.hsl} />
-          </div>
-
-          {/* Center Column: Ingredient Colors */}
-          <div className="lg:col-span-4 flex flex-col items-center">
-             <h3 className="text-lg font-semibold mb-4">Choose Ingredients</h3>
-             <div className="flex flex-col gap-6">
-                <ColorInput id="colorA" label="Color A" value={colorA} onChange={(v) => handleColorChange(setColorA, v)} hsl={colorAInfo.hsl} />
-                <ColorInput id="colorB" label="Color B" value={colorB} onChange={(v) => handleColorChange(setColorB, v)} hsl={colorBInfo.hsl} />
-             </div>
-          </div>
-
-          {/* Right Column: Results */}
-          <div className="lg:col-span-4 flex flex-col items-center">
-            <h3 className="text-lg font-semibold mb-4">Mixing Result</h3>
-            <div className={`flex flex-col items-center gap-2 p-4 border rounded-md ${isDark ? 'border-gray-700' : 'border-gray-200'} bg-white dark:bg-gray-800 shadow-sm w-full`}>
-              <div className="flex items-center justify-center gap-4 mb-2"> {/* Container for swatches */} 
-                {/* Target Swatch */}
-                <div className="text-center">
-                  <div 
-                    className="w-24 h-24 rounded-lg shadow-inner border-2 border-gray-300 dark:border-gray-600 mb-1"
-                    style={{ backgroundColor: targetColor }}
-                    title={`Target: ${targetColor}`}
-                  ></div>
-                  <span className="text-xs font-medium">Target</span>
+            </div>
+            
+            {/* Right Column: Mixing & Results */}
+            <div className="space-y-8">
+              {/* Ingredients Section */}
+              <div>
+                <h3 className="text-2xl font-semibold mb-6 pb-3 border-b border-gray-200 dark:border-gray-700">Paint Ingredients</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                  <ColorInput 
+                    id="colorA" 
+                    label="Color A" 
+                    value={colorA} 
+                    onChange={(v) => handleColorChange(setColorA, v)} 
+                    hsl={colorAInfo.hsl} 
+                  />
+                  <ColorInput 
+                    id="colorB" 
+                    label="Color B" 
+                    value={colorB} 
+                    onChange={(v) => handleColorChange(setColorB, v)} 
+                    hsl={colorBInfo.hsl} 
+                  />
                 </div>
-                 {/* Achieved Mix Swatch */} 
-                 <div className="text-center">
-                   <div 
-                    className="w-24 h-24 rounded-lg shadow-inner border-2 border-gray-300 dark:border-gray-600 mb-1"
-                    style={{ backgroundColor: bestMixHex }}
-                    title={`Achieved Mix: ${bestMixHex}`}
-                  ></div>
-                   <span className="text-xs font-medium">Achieved Mix</span>
-                 </div>
-               </div>
-                {/* HSL for Result */}
-               <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                 {bestMixHsl ? `H:${bestMixHsl.h}° S:${bestMixHsl.s}% L:${bestMixHsl.l}%` : '-'} (Achieved)
-               </div>
-               <p className="text-sm font-semibold mt-3">Calculated Ratio:</p>
-               <p className="text-sm">{`${Math.round((1 - bestRatio) * 100)}% Color A`}</p>
-               <p className="text-sm">{`${Math.round(bestRatio * 100)}% Color B`}</p>
+              </div>
+              
+              {/* Results Section */}
+              <div>
+                <h3 className="text-2xl font-semibold mb-6 pb-3 border-b border-gray-200 dark:border-gray-700">Mixing Result</h3>
+                <div className="space-y-6">
+                  {/* Swatches Comparison */}
+                  <div className="flex items-center justify-center gap-6">
+                    {/* Target Swatch */}
+                    <div className="text-center">
+                      <div 
+                        className="w-40 h-40 rounded-lg shadow-inner border border-gray-300 dark:border-gray-600"
+                        style={{ backgroundColor: targetColor }}
+                      ></div>
+                      <p className="mt-3 text-base font-medium">Target</p>
+                    </div>
+                    
+                    {/* Arrow */}
+                    <div className="flex flex-col items-center">
+                      <svg 
+                        className="w-12 h-12 text-gray-400 dark:text-gray-500" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </div>
+                    
+                    {/* Achieved Mix Swatch */}
+                    <div className="text-center">
+                      <div 
+                        className="w-40 h-40 rounded-lg shadow-inner border border-gray-300 dark:border-gray-600"
+                        style={{ backgroundColor: bestMixHex }}
+                      ></div>
+                      <p className="mt-3 text-base font-medium">Best Mix</p>
+                    </div>
+                  </div>
+                  
+                  {/* Mix Information */}
+                  <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                    <p className="text-lg font-medium mb-3">Mixing Formula:</p>
+                    <RatioVisualization />
+                    <div className="mt-4 text-base text-gray-600 dark:text-gray-300">
+                      {bestMixHsl ? (
+                        <div className="flex flex-col gap-2">
+                          <p>Mix HSL: H:{bestMixHsl.h}° S:{bestMixHsl.s}% L:{bestMixHsl.l}%</p>
+                          <p>Color code: {bestMixHex}</p>
+                        </div>
+                      ) : '-'}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Color Wheel Reference Image */}
-        <div className="my-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col items-center">
-            <h3 className="text-lg font-semibold mb-3">Color Wheel Reference</h3>
-            <img 
-                src="/images/wheel.png" 
-                alt="Color Wheel"
-                className="max-w-xs md:max-w-sm rounded-lg shadow-md"
-            />
-            <p className="text-xs italic mt-2 text-gray-500 dark:text-gray-400">A standard artist's color wheel.</p>
-        </div>
-
-        {/* Mixing Tips */}
-        <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 prose dark:prose-invert max-w-none">
-           <h3 className="text-xl font-semibold mb-3">Understanding the Mix</h3>
-           <p className="mb-4">
-               This tool simulates mixing using RGB interpolation. Real paint mixing (subtractive) is more complex and pigment-dependent. Use this as a digital guide.
-           </p>
-           <ul className="mb-4 space-y-2">
-             <li>
-               <strong>Hue (H):</strong> The base color angle (0-360°). Mixing generally shifts the hue towards the dominant color or lands somewhere between the two ingredient hues.
-             </li>
-             <li>
-               <strong>Saturation (S):</strong> The color's intensity or purity (0-100%). Mixing almost always <em>reduces</em> saturation, especially when combining colors far apart on the color wheel (like complements). A less saturated color is often called a 'tone'.
-             </li>
-             <li>
-               <strong>Lightness (L) / Value:</strong> How light or dark the color is (0-100%). Mixing tends to average the lightness. Adding white creates 'tints' (higher L), while adding black creates 'shades' (lower L). Value is critical for defining form and structure in a painting.
-             </li>
-             <li>
-               <strong>Temperature:</strong> Colors are perceived as warm (reds, oranges, yellows) or cool (blues, greens, violets). Mixing across temperatures can neutralize colors. Consider the temperature bias of your specific paints (e.g., Ultramarine Blue is warmer than Phthalo Blue).
-             </li>
-           </ul>
-           <p>
-                Observe how the HSL values change for the 'Achieved Mix' compared to your chosen ingredients (Color A & B) and your desired Target color.
-           </p>
+        
+        {/* Educational Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            {/* Color Wheel Reference */}
+            <div className="lg:col-span-1 flex flex-col items-center">
+              <h3 className="text-2xl font-semibold mb-6 self-start">Color Wheel</h3>
+              <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+                <img 
+                  src="/images/wheel.png" 
+                  alt="Color Wheel"
+                  className="max-w-full rounded-lg shadow-md"
+                />
+                <p className="text-base italic mt-3 text-center text-gray-500 dark:text-gray-400">
+                  Standard artist's color wheel reference
+                </p>
+              </div>
+            </div>
+            
+            {/* Understanding Colors */}
+            <div className="lg:col-span-2">
+              <h3 className="text-2xl font-semibold mb-6">Understanding Color Mixing</h3>
+              <div className="prose dark:prose-invert prose-lg max-w-none">
+                <p className="text-lg">
+                  This tool simulates mixing using RGB interpolation. Real paint mixing (subtractive) is more complex and pigment-dependent. Use this as a digital guide.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div className="bg-gray-50 dark:bg-gray-700 p-5 rounded-lg">
+                    <h4 className="text-lg font-medium mb-2">Hue (H)</h4>
+                    <p className="text-base">
+                      The base color angle (0-360°). Mixing shifts the hue toward the dominant color or between the two ingredient hues.
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 p-5 rounded-lg">
+                    <h4 className="text-lg font-medium mb-2">Saturation (S)</h4>
+                    <p className="text-base">
+                      The color's intensity (0-100%). Mixing almost always <em>reduces</em> saturation, especially when combining complementary colors.
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 p-5 rounded-lg">
+                    <h4 className="text-lg font-medium mb-2">Lightness (L)</h4>
+                    <p className="text-base">
+                      How light or dark a color is (0-100%). Mixing tends to average lightness. White creates tints, black creates shades.
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 p-5 rounded-lg">
+                    <h4 className="text-lg font-medium mb-2">Temperature</h4>
+                    <p className="text-base">
+                      Colors are perceived as warm (reds, oranges, yellows) or cool (blues, greens, violets). Mixing across temperatures neutralizes colors.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
