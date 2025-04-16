@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/chiaroscuro/static/css/main.2178129a.css",
+    "main.js": "/chiaroscuro/static/js/main.fa7f4344.js",
+    "static/js/453.66eea0bd.chunk.js": "/chiaroscuro/static/js/453.66eea0bd.chunk.js",
+    "index.html": "/chiaroscuro/index.html",
+    "main.2178129a.css.map": "/chiaroscuro/static/css/main.2178129a.css.map",
+    "main.fa7f4344.js.map": "/chiaroscuro/static/js/main.fa7f4344.js.map",
+    "453.66eea0bd.chunk.js.map": "/chiaroscuro/static/js/453.66eea0bd.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.2178129a.css",
+    "static/js/main.fa7f4344.js"
+  ]
+}
