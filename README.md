@@ -1,5 +1,7 @@
 # Chiaroscuro - Artist's Paint Mixing Assistant
 
+**[Live Demo](https://ppscon.github.io/chiaroscuro)** | [GitHub Repository](https://github.com/ppscon/chiaroscuro)
+
 ## Overview
 
 Chiaroscuro is a specialized web application designed for artists that helps bridge the gap between digital colors and real-world oil paints. The application allows users to upload an image, analyze its color composition, select specific colors, and receive customized paint mixing recipes using professional oil paint brands.
@@ -37,6 +39,10 @@ Chiaroscuro employs sophisticated color science algorithms to:
 - Account for the non-linear mixing behavior of oil paints
 
 ## Getting Started
+
+### Live Demo
+
+You can try out Chiaroscuro without installing anything by visiting our [live demo](https://ppscon.github.io/chiaroscuro).
 
 ### Prerequisites
 
