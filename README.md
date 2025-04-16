@@ -81,6 +81,32 @@ The application includes educational resources about:
 - Famous works demonstrating chiaroscuro techniques
 - Interactive examples from masters like Caravaggio
 
+## Project Milestones
+
+### Version 0.4.0 (Current)
+- Optimized image analyzer component for better performance
+- Improved workflow to guide users from upload directly to analysis
+- Enhanced paint mixing algorithm with more accurate color matching
+- Added educational content featuring Caravaggio masterpieces with interactive exploration
+
+### Version 0.3.0
+- Implemented PaintMixer component with RGB/HSL interpolation
+- Added comprehensive paint database with LAB color values
+- Created color picker functionality to sample from uploaded images
+- Integrated responsive design for all device sizes
+
+### Version 0.2.0
+- Added image analysis features (dominant colors, temperature, chroma)
+- Implemented drag-and-drop image upload functionality
+- Created initial UI with dark/light theme support
+- Built foundation for color science algorithms
+
+### Version 0.1.0
+- Initial project setup with React and TypeScript
+- Implemented basic routing and component structure
+- Added TailwindCSS for styling
+- Created project documentation
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
